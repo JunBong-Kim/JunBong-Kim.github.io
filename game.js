@@ -10,15 +10,20 @@
   const highScoreElement = document.getElementById("high-score");
   const levelElement = document.getElementById("level");
   const nicknameInput = document.getElementById("nickname");
+  const playerCountInput = document.getElementById("player-count");
+  const playerStatus = document.getElementById("player-status");
   const width = canvas.width;
   const height = canvas.height;
   const highScoreKey = "fish-eat-fish-high-score";
   const directions = {
-    up: { x: 0, y: -1 },
-    down: { x: 0, y: 1 },
-    left: { x: -1, y: 0 },
-    right: { x: 1, y: 0 }
+    up: { x: 0, y: -1 }, down: { x: 0, y: 1 },
+    left: { x: -1, y: 0 }, right: { x: 1, y: 0 }
   };
+  const playerProfiles = [
+    { color: "#55e6a5", keys: { ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right", KeyW: "up", KeyS: "down", KeyA: "left", KeyD: "right" }, label: "P1" },
+    { color: "#65b7ff", keys: { KeyI: "up", KeyK: "down", KeyJ: "left", KeyL: "right" }, label: "P2" },
+    { color: "#ffd166", keys: { KeyT: "up", KeyG: "down", KeyF: "left", KeyH: "right" }, label: "P3" }
+  ];
   let state = null;
   let animationFrame = 0;
   let lastTime = 0;
@@ -29,41 +34,28 @@
     return Math.random() * (max - min) + min;
   }
 
-  function createFish(size, color, player) {
+  function createFish(size, color, player, index) {
     return {
-      x: random(size, width - size),
-      y: random(size, height - size),
-      size,
-      color,
-      player: Boolean(player),
-      direction: { ...directions.right },
-      speed: player ? 170 : random(22, 48),
-      angle: random(0, Math.PI * 2)
+      x: player ? width * (0.28 + index * 0.22) : random(size, width - size),
+      y: player ? height * (0.35 + (index % 2) * 0.3) : random(size, height - size),
+      size, color, player: Boolean(player), index: index || 0,
+      direction: { ...directions.right }, speed: player ? 170 : random(24, 54),
+      angle: random(0, Math.PI * 2), score: 0, alive: true
     };
   }
 
   function createState() {
+    const count = Number(playerCountInput.value);
     return {
-      running: true,
-      score: 0,
-      level: 1,
-      player: { ...createFish(22, "#55e6a5", true), x: width / 2, y: height / 2 },
+      running: true, paused: false, score: 0, level: 1,
+      players: Array.from({ length: count }, (_, index) => createFish(22, playerProfiles[index].color, true, index)),
       fish: [
-        createFish(13, "#ffd166"), createFish(18, "#ff7b9c"),
-        createFish(27, "#ff5c5c"), createFish(33, "#b47cff"),
-        createFish(42, "#f27c38")
+        createFish(12, "#b8f2e6"), createFish(14, "#ff8fab"), createFish(17, "#f9c74f"),
+        createFish(22, "#ff6b6b"), createFish(28, "#b47cff"), createFish(36, "#f27c38"),
+        createFish(46, "#9b5de5")
       ],
-      worms: Array.from({ length: 5 }, () => ({ x: random(20, width - 20), y: random(20, height - 20), size: 8 }))
+      worms: Array.from({ length: 7 }, () => ({ x: random(20, width - 20), y: random(20, height - 20), size: 8 }))
     };
-  }
-
-  function setDirection(name) {
-    if (!state || !state.running) return;
-    const next = directions[name];
-    if (!next) return;
-    const current = state.player.direction;
-    const isReverse = next.x === -current.x && next.y === -current.y;
-    if (!isReverse) state.player.direction = { ...next };
   }
 
   function startGame() {
@@ -72,6 +64,7 @@
     pauseButton.disabled = false;
     pauseButton.textContent = "일시정지";
     message.hidden = true;
+    playerStatus.textContent = `${state.players.length}인 모드 · ${playerProfiles[0].label}: 화살표/WASD`;
     updateScoreboard();
     cancelAnimationFrame(animationFrame);
     lastTime = performance.now();
@@ -83,17 +76,29 @@
     levelElement.textContent = state ? state.level : 1;
   }
 
-  function addScore(amount) {
-    state.score += amount;
-    state.level = Math.floor(state.score / 3) + 1;
-    const highScore = Math.max(state.score, Number(localStorage.getItem(highScoreKey) || 0));
-    localStorage.setItem(highScoreKey, highScore);
-    highScoreElement.textContent = highScore;
-    updateScoreboard();
+  function addScore(amount, player) {
+    player.score += amount;
+    if (player.index === 0) {
+      state.score = player.score;
+      state.level = Math.floor(state.score / 3) + 1;
+      const highScore = Math.max(state.score, Number(localStorage.getItem(highScoreKey) || 0));
+      localStorage.setItem(highScoreKey, highScore);
+      highScoreElement.textContent = highScore;
+      updateScoreboard();
+    }
   }
 
   function distance(a, b) {
     return Math.hypot(a.x - b.x, a.y - b.y);
+  }
+
+  function setDirection(player, name) {
+    if (!state || !state.running || state.paused || !player.alive) return;
+    const next = directions[name];
+    if (!next) return;
+    const current = player.direction;
+    const isReverse = next.x === -current.x && next.y === -current.y;
+    if (!isReverse) player.direction = { ...next };
   }
 
   function moveFish(fish, delta) {
@@ -109,10 +114,11 @@
     fish.y = Math.max(fish.size, Math.min(height - fish.size, fish.y));
   }
 
-  function gameOver() {
+  function gameOver(player) {
     state.running = false;
     pauseButton.disabled = true;
-    message.textContent = `${nicknameInput.value.trim() || "플레이어"}의 기록: ${state.score}점`;
+    const name = nicknameInput.value.trim() || "플레이어 1";
+    message.textContent = `${player.index === 0 ? name : `플레이어 ${player.index + 1}`}가 탈락했습니다 · P1 점수 ${state.score}점`;
     message.hidden = false;
   }
 
@@ -124,33 +130,54 @@
     message.hidden = !state.paused;
   }
 
+  function handlePlayerCollisions() {
+    for (let i = 0; i < state.players.length; i += 1) {
+      const first = state.players[i];
+      if (!first.alive) continue;
+      for (let j = i + 1; j < state.players.length; j += 1) {
+        const second = state.players[j];
+        if (!second.alive || distance(first, second) >= first.size + second.size) continue;
+        const winner = first.size >= second.size ? first : second;
+        const loser = winner === first ? second : first;
+        winner.size += 2;
+        addScore(3, winner);
+        loser.alive = false;
+        if (loser.index === 0) gameOver(loser);
+      }
+    }
+  }
+
   function update(delta) {
-    moveFish(state.player, delta);
+    state.players.filter((player) => player.alive).forEach((player) => moveFish(player, delta));
     state.fish.forEach((fish) => moveFish(fish, delta));
+    const mainPlayer = state.players[0];
+    if (!mainPlayer.alive) return;
 
     state.worms = state.worms.filter((worm) => {
-      if (distance(state.player, worm) < state.player.size + worm.size) {
-        addScore(1);
-        return false;
-      }
-      return true;
+      const eater = state.players.find((player) => player.alive && distance(player, worm) < player.size + worm.size);
+      if (!eater) return true;
+      eater.size += 0.8;
+      addScore(1, eater);
+      return false;
     });
 
     state.fish = state.fish.filter((fish) => {
-      if (distance(state.player, fish) >= state.player.size + fish.size) return true;
-      if (state.player.size >= fish.size) {
-        state.player.size += 2;
-        addScore(2);
+      const eater = state.players.find((player) => player.alive && distance(player, fish) < player.size + fish.size);
+      if (!eater) return true;
+      if (eater.size >= fish.size) {
+        eater.size += 2;
+        addScore(2, eater);
         return false;
       }
-      gameOver();
+      gameOver(eater);
       return true;
     });
-
-    if (state.worms.length < 3) state.worms.push({ x: random(20, width - 20), y: random(20, height - 20), size: 8 });
+    handlePlayerCollisions();
+    while (state.worms.length < 5) state.worms.push({ x: random(20, width - 20), y: random(20, height - 20), size: 8 });
   }
 
   function drawFish(fish) {
+    if (!fish.alive) return;
     context.save();
     context.translate(fish.x, fish.y);
     const facing = fish.player ? fish.direction.x || 1 : Math.cos(fish.angle) >= 0 ? 1 : -1;
@@ -169,6 +196,12 @@
     context.beginPath();
     context.arc(fish.size * 0.5, -fish.size * 0.18, Math.max(2, fish.size * 0.1), 0, Math.PI * 2);
     context.fill();
+    if (fish.player) {
+      context.fillStyle = "#eef6ff";
+      context.font = "bold 10px system-ui";
+      context.textAlign = "center";
+      context.fillText(`P${fish.index + 1}`, 0, -fish.size - 8);
+    }
     context.restore();
   }
 
@@ -191,7 +224,7 @@
     if (!state) return;
     state.worms.forEach(drawWorm);
     state.fish.forEach(drawFish);
-    drawFish(state.player);
+    state.players.forEach(drawFish);
   }
 
   function loop(time) {
@@ -203,16 +236,19 @@
   }
 
   document.addEventListener("keydown", (event) => {
-    const keys = { ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right", KeyW: "up", KeyS: "down", KeyA: "left", KeyD: "right", w: "up", W: "up", s: "down", S: "down", a: "left", A: "left", d: "right", D: "right" };
-    const direction = keys[event.key] || keys[event.code];
-    if (direction) {
-      event.preventDefault();
-      setDirection(direction);
+    if (!state) return;
+    if (event.key === "p" || event.key === "P") {
+      togglePause();
+      return;
     }
-    if (event.key === "p" || event.key === "P") togglePause();
+    const player = state.players.find((candidate) => candidate.alive && playerProfiles[candidate.index].keys[event.code]);
+    if (player) {
+      event.preventDefault();
+      setDirection(player, playerProfiles[player.index].keys[event.code]);
+    }
   });
   document.querySelectorAll("[data-direction]").forEach((button) => {
-    button.addEventListener("pointerdown", () => setDirection(button.dataset.direction));
+    button.addEventListener("pointerdown", () => setDirection(state && state.players[0], button.dataset.direction));
   });
   startButton.addEventListener("click", startGame);
   pauseButton.addEventListener("click", togglePause);

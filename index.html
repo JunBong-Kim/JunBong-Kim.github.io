@@ -62,11 +62,18 @@
         <p>작은 물고기를 먹고 성장하세요. 지렁이는 레벨업 간식이고, 더 큰 물고기에게 먹히면 게임이 끝납니다.</p>
         <label class="nickname-label" for="nickname">별명</label>
         <input id="nickname" maxlength="16" placeholder="별명을 입력하세요" autocomplete="nickname">
+        <label class="nickname-label" for="player-count">플레이 인원</label>
+        <select id="player-count">
+          <option value="1">1인 생존</option>
+          <option value="2">2인 로컬 대결</option>
+          <option value="3">3인 로컬 대결</option>
+        </select>
         <div class="scoreboard" aria-live="polite">
           <span>점수 <strong id="score">0</strong></span>
           <span>최고 <strong id="high-score">0</strong></span>
           <span>레벨 <strong id="level">1</strong></span>
         </div>
+        <p class="player-status" id="player-status">플레이어 1: 화살표 키 / WASD</p>
         <div class="game-actions">
           <button class="button game-button" id="start-game" type="button">게임 시작</button>
           <button class="secondary-button" id="pause-game" type="button" disabled>일시정지</button>
@@ -83,7 +90,7 @@
           <button type="button" data-direction="down" aria-label="아래로 이동">▼</button>
           <button type="button" data-direction="right" aria-label="오른쪽으로 이동">▶</button>
         </div>
-        <p class="controls-hint">화살표 키·WASD 또는 화면 버튼으로 이동하세요. P로 일시정지할 수 있습니다.</p>
+        <p class="controls-hint">P1: 화살표/WASD · P2: IJKL · P3: TFGH · P로 일시정지</p>
       </div>
     </section>
 
