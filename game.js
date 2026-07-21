@@ -4,6 +4,7 @@
   const canvas = document.getElementById("game-canvas");
   const context = canvas.getContext("2d");
   const startButton = document.getElementById("start-game");
+  const pauseButton = document.getElementById("pause-game");
   const message = document.getElementById("game-message");
   const scoreElement = document.getElementById("score");
   const highScoreElement = document.getElementById("high-score");
@@ -59,12 +60,17 @@
   function setDirection(name) {
     if (!state || !state.running) return;
     const next = directions[name];
-    if (next) state.player.direction = { ...next };
+    if (!next) return;
+    const current = state.player.direction;
+    const isReverse = next.x === -current.x && next.y === -current.y;
+    if (!isReverse) state.player.direction = { ...next };
   }
 
   function startGame() {
     state = createState();
     startButton.textContent = "다시 시작";
+    pauseButton.disabled = false;
+    pauseButton.textContent = "일시정지";
     message.hidden = true;
     updateScoreboard();
     cancelAnimationFrame(animationFrame);
@@ -105,8 +111,17 @@
 
   function gameOver() {
     state.running = false;
+    pauseButton.disabled = true;
     message.textContent = `${nicknameInput.value.trim() || "플레이어"}의 기록: ${state.score}점`;
     message.hidden = false;
+  }
+
+  function togglePause() {
+    if (!state || !state.running) return;
+    state.paused = !state.paused;
+    pauseButton.textContent = state.paused ? "계속하기" : "일시정지";
+    message.textContent = state.paused ? "일시정지" : "";
+    message.hidden = !state.paused;
   }
 
   function update(delta) {
@@ -182,21 +197,24 @@
   function loop(time) {
     const delta = Math.min((time - lastTime) / 1000, 0.05);
     lastTime = time;
-    if (state.running) update(delta);
+    if (state.running && !state.paused) update(delta);
     draw();
     if (state.running) animationFrame = requestAnimationFrame(loop);
   }
 
   document.addEventListener("keydown", (event) => {
-    const keys = { ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right" };
-    if (keys[event.key]) {
+    const keys = { ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right", KeyW: "up", KeyS: "down", KeyA: "left", KeyD: "right", w: "up", W: "up", s: "down", S: "down", a: "left", A: "left", d: "right", D: "right" };
+    const direction = keys[event.key] || keys[event.code];
+    if (direction) {
       event.preventDefault();
-      setDirection(keys[event.key]);
+      setDirection(direction);
     }
+    if (event.key === "p" || event.key === "P") togglePause();
   });
   document.querySelectorAll("[data-direction]").forEach((button) => {
     button.addEventListener("pointerdown", () => setDirection(button.dataset.direction));
   });
   startButton.addEventListener("click", startGame);
+  pauseButton.addEventListener("click", togglePause);
   draw();
 })();

@@ -14,6 +14,11 @@
     <a class="brand" href="#home" aria-label="홈으로 이동">FISH / FISH</a>
     <nav aria-label="주요 메뉴">
       <a href="#home">Home</a>
+      <a href="#about">About</a>
+      <a href="#projects">Projects</a>
+      <a href="#experience">Experience</a>
+      <a href="#research">Research</a>
+      <a href="#contact">Contact</a>
       <a href="#games">Games</a>
     </nav>
   </header>
@@ -24,6 +29,30 @@
       <h1 id="hero-title">나의 기록을<br><span>게임으로 만나요.</span></h1>
       <p class="intro">별명과 최고 스코어를 기록하는 반응형 게임 공간입니다.</p>
       <a class="button" href="#games">Games 시작하기</a>
+    </section>
+
+    <section id="about" class="content-section" aria-labelledby="about-title">
+      <p class="eyebrow">ABOUT</p>
+      <h2 id="about-title">공개할 프로필 정보</h2>
+      <p class="muted-copy">프로필 자료가 없어 상세 소개는 아직 공개하지 않습니다. 필요한 내용은 <strong>[사람 확인 필요]</strong>입니다.</p>
+    </section>
+
+    <section class="card-grid" aria-label="활동 정보">
+      <article id="projects" class="info-card">
+        <p class="eyebrow">PROJECTS</p>
+        <h2>Projects</h2>
+        <p>공개할 프로젝트 정보는 <strong>[사람 확인 필요]</strong>입니다.</p>
+      </article>
+      <article id="experience" class="info-card">
+        <p class="eyebrow">EXPERIENCE</p>
+        <h2>Experience</h2>
+        <p>공개할 경력 정보는 <strong>[사람 확인 필요]</strong>입니다.</p>
+      </article>
+      <article id="research" class="info-card">
+        <p class="eyebrow">RESEARCH</p>
+        <h2>Research</h2>
+        <p>공개할 연구 정보는 <strong>[사람 확인 필요]</strong>입니다.</p>
+      </article>
     </section>
 
     <section id="games" class="games-panel" aria-labelledby="games-title">
@@ -38,7 +67,10 @@
           <span>최고 <strong id="high-score">0</strong></span>
           <span>레벨 <strong id="level">1</strong></span>
         </div>
-        <button class="button game-button" id="start-game" type="button">게임 시작</button>
+        <div class="game-actions">
+          <button class="button game-button" id="start-game" type="button">게임 시작</button>
+          <button class="secondary-button" id="pause-game" type="button" disabled>일시정지</button>
+        </div>
       </div>
       <div class="game-shell">
         <div class="canvas-wrap">
@@ -51,8 +83,14 @@
           <button type="button" data-direction="down" aria-label="아래로 이동">▼</button>
           <button type="button" data-direction="right" aria-label="오른쪽으로 이동">▶</button>
         </div>
-        <p class="controls-hint">화살표 키 또는 화면 버튼으로 이동하세요.</p>
+        <p class="controls-hint">화살표 키·WASD 또는 화면 버튼으로 이동하세요. P로 일시정지할 수 있습니다.</p>
       </div>
+    </section>
+
+    <section id="contact" class="content-section contact-section" aria-labelledby="contact-title">
+      <p class="eyebrow">CONTACT</p>
+      <h2 id="contact-title">기록으로 연결됩니다.</h2>
+      <p class="muted-copy">현재 공개하는 정보는 별명과 최고 스코어뿐입니다.</p>
     </section>
   </main>
 </body>
