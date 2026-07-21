@@ -7,6 +7,7 @@
   <title>Fish Eat Fish</title>
   <link rel="stylesheet" href="styles.css">
   <script src="script.js" defer></script>
+  <script src="game.js" defer></script>
 </head>
 <body>
   <header class="site-header">
@@ -29,9 +30,29 @@
       <div>
         <p class="eyebrow">GAMES</p>
         <h2 id="games-title">Fish Eat Fish</h2>
-        <p>게임 화면을 준비하고 있습니다. 게임 규칙과 조작은 다음 개발 루프에서 구현합니다.</p>
+        <p>작은 물고기를 먹고 성장하세요. 지렁이는 레벨업 간식이고, 더 큰 물고기에게 먹히면 게임이 끝납니다.</p>
+        <label class="nickname-label" for="nickname">별명</label>
+        <input id="nickname" maxlength="16" placeholder="별명을 입력하세요" autocomplete="nickname">
+        <div class="scoreboard" aria-live="polite">
+          <span>점수 <strong id="score">0</strong></span>
+          <span>최고 <strong id="high-score">0</strong></span>
+          <span>레벨 <strong id="level">1</strong></span>
+        </div>
+        <button class="button game-button" id="start-game" type="button">게임 시작</button>
       </div>
-      <div class="game-placeholder" role="status" aria-live="polite">GAME AREA / 준비 중</div>
+      <div class="game-shell">
+        <div class="canvas-wrap">
+          <canvas id="game-canvas" width="800" height="500" aria-label="물고기 게임 화면"></canvas>
+          <p class="game-message" id="game-message">게임 시작 버튼을 누르세요</p>
+        </div>
+        <div class="touch-controls" aria-label="모바일 게임 조작">
+          <button type="button" data-direction="up" aria-label="위로 이동">▲</button>
+          <button type="button" data-direction="left" aria-label="왼쪽으로 이동">◀</button>
+          <button type="button" data-direction="down" aria-label="아래로 이동">▼</button>
+          <button type="button" data-direction="right" aria-label="오른쪽으로 이동">▶</button>
+        </div>
+        <p class="controls-hint">화살표 키 또는 화면 버튼으로 이동하세요.</p>
+      </div>
     </section>
   </main>
 </body>
