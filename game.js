@@ -35,12 +35,14 @@
   }
 
   function createFish(size, color, player, index) {
+    const angle = random(0, Math.PI * 2);
     return {
       x: player ? width * (0.28 + index * 0.22) : random(size, width - size),
       y: player ? height * (0.35 + (index % 2) * 0.3) : random(size, height - size),
       size, color, player: Boolean(player), index: index || 0,
-      direction: { ...directions.right }, speed: player ? 170 : random(24, 54),
-      angle: random(0, Math.PI * 2), score: 0, alive: true
+      direction: { ...directions.right }, speed: player ? 170 : random(28, 62),
+      angle, velocity: { x: Math.cos(angle), y: Math.sin(angle) },
+      turnTimer: random(0.3, 1.5), score: 0, alive: true
     };
   }
 
@@ -88,6 +90,11 @@
     }
   }
 
+  function growFish(player, amount) {
+    player.size = Math.min(player.size + amount, 88);
+    if (player.index === 0) updateScoreboard();
+  }
+
   function distance(a, b) {
     return Math.hypot(a.x - b.x, a.y - b.y);
   }
@@ -106,9 +113,22 @@
       fish.x += fish.direction.x * fish.speed * delta;
       fish.y += fish.direction.y * fish.speed * delta;
     } else {
-      fish.angle += random(-0.7, 0.7) * delta;
-      fish.x += Math.cos(fish.angle) * fish.speed * delta;
-      fish.y += Math.sin(fish.angle) * fish.speed * delta;
+      fish.turnTimer -= delta;
+      if (fish.turnTimer <= 0) {
+        fish.angle += random(-1.6, 1.6);
+        fish.velocity = { x: Math.cos(fish.angle), y: Math.sin(fish.angle) };
+        fish.turnTimer = random(0.45, 1.8);
+      }
+      fish.x += fish.velocity.x * fish.speed * delta;
+      fish.y += fish.velocity.y * fish.speed * delta;
+      if (fish.x <= fish.size || fish.x >= width - fish.size) {
+        fish.velocity.x *= -1;
+        fish.angle = Math.atan2(fish.velocity.y, fish.velocity.x);
+      }
+      if (fish.y <= fish.size || fish.y >= height - fish.size) {
+        fish.velocity.y *= -1;
+        fish.angle = Math.atan2(fish.velocity.y, fish.velocity.x);
+      }
     }
     fish.x = Math.max(fish.size, Math.min(width - fish.size, fish.x));
     fish.y = Math.max(fish.size, Math.min(height - fish.size, fish.y));
@@ -139,7 +159,7 @@
         if (!second.alive || distance(first, second) >= first.size + second.size) continue;
         const winner = first.size >= second.size ? first : second;
         const loser = winner === first ? second : first;
-        winner.size += 2;
+        growFish(winner, 4);
         addScore(3, winner);
         loser.alive = false;
         if (loser.index === 0) gameOver(loser);
@@ -156,7 +176,7 @@
     state.worms = state.worms.filter((worm) => {
       const eater = state.players.find((player) => player.alive && distance(player, worm) < player.size + worm.size);
       if (!eater) return true;
-      eater.size += 0.8;
+      growFish(eater, 1.5);
       addScore(1, eater);
       return false;
     });
@@ -165,7 +185,7 @@
       const eater = state.players.find((player) => player.alive && distance(player, fish) < player.size + fish.size);
       if (!eater) return true;
       if (eater.size >= fish.size) {
-        eater.size += 2;
+        growFish(eater, Math.max(3, fish.size * 0.18));
         addScore(2, eater);
         return false;
       }
@@ -173,6 +193,11 @@
       return true;
     });
     handlePlayerCollisions();
+    while (state.fish.length < 7) {
+      const size = random(11, Math.min(46, 14 + state.level * 2));
+      const colors = ["#b8f2e6", "#ff8fab", "#f9c74f", "#ff6b6b", "#b47cff", "#f27c38", "#9b5de5"];
+      state.fish.push(createFish(size, colors[Math.floor(random(0, colors.length))]));
+    }
     while (state.worms.length < 5) state.worms.push({ x: random(20, width - 20), y: random(20, height - 20), size: 8 });
   }
 
